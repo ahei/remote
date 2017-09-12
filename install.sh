@@ -1,16 +1,18 @@
 #!/bin/bash
 
-# Time-stamp: <2016-11-16 14:52:12 Wednesday by ahei>
+# Time-stamp: <2017-09-12 11:22:30 Tuesday by ahei>
 
 readonly PROGRAM_NAME="install.sh"
 readonly PROGRAM_VERSION="1.0"
 
-HOSTS_FILE=/etc/hosts
-
 home=`dirname "$0"`
 home=`cd "$home"; pwd`
 
-. "$home"/common.sh
+# echo to stderr
+echoe()
+{
+    printf "$*\n" 1>&2
+}
 
 usage()
 {
@@ -60,10 +62,6 @@ while getopts ":hvp:" OPT; do
             profile="$OPTARG"
             ;;
             
-        v)
-            version
-            ;;
-
         h)
             usage
             ;;
@@ -85,28 +83,4 @@ done
 
 shift $((OPTIND - 1))
 
-installDir="/usr/bin"
-if [ $# -ge 1 ]; then
-    installDir="$1"
-fi
-
-ln -sf "${home}"/.mostrc ~
-ln -sf "${home}"/.toprc ~
-ln -sf "${home}"/.screenrc ~
-ln -sf "${home}"/.xmodmap ~
-ln -sf "${home}"/.tmux.conf ~
-# cp "${home}"/ssh-config ~/.ssh/config
-chmod 600 ~/.ssh/config
-cp "${home}"/.gdbinit ~
-
-writeToFile ". $home/utils.sh" $profile
-writeToFile ". $home/history.sh" $profile
 writeToFile "export PATH=$home:"'$PATH' $profile
-
-terminalFile=`which gnome-terminal 2>/dev/null`
-if [ $? = 0 ]; then
-    ln -sf "$terminalFile" "$home/terminal"
-fi
-
-mkdir -p ~/.config/terminator/
-ln -sf "${home}"/terminator-config ~/.config/terminator/config

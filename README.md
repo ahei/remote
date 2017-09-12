@@ -5,8 +5,9 @@ remote
 
 安装
 ===
-1. git clone https://github.com/ahei/remote
-2. 执行`cd remote && ./install.sh`
+```
+git clone https://github.com/ahei/remote && cd remote && ./install.sh
+```
 
 
 前提和原理
