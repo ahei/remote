@@ -3,6 +3,18 @@ remote
 让你可以同时在多台远程机器上执行你指定的命令.
 
 
+特性
+===
+- 支持用集群名指定机器列表
+- 支持并行和串行执行命令
+- 支持拷贝文件模式
+- 待执行的命令包含参数时如果不需要引用的话不需要用引号引起来, 比如`remote cluster “ls -l”`可以直接写成`remote cluster ls -l`
+- 执行的命令涉及到目录/文件时可以直接用相对路径, 比如当前在路径`~/work`目录下, 那么`remote cluster cat a`就是到每台机器上执行命令`cat ~/work/a`
+- 支持调试模式, 不运行命令, 只打印将要运行的命令, 防止出错
+- 支持从命令行和文件中读取机器列表
+- 支持设定每台机器之间运行命令的间隔
+
+
 安装
 ===
 ```
@@ -12,7 +24,7 @@ git clone https://github.com/ahei/remote && cd remote && ./install.sh
 
 前提和原理
 --------
-remote命令原理很简单, 就是for循环ssh到每台机器上执行命令, 所以使用该命令的前提是当前机器必须和每台机器增加免密码输入, 否则你会累死...
+remote命令原理很简单, 就是for循环ssh到每台机器上执行命令, 所以使用该命令的前提是当前机器ssh到每台机器时不用输入密码, 否则你会累死...
 
 
 使用方法
@@ -149,15 +161,3 @@ rps
 `rps 可选选项 集群名 PATTERN`
 
 `rps redis crond`
-
-
-
-psgrep
-======
-ps -ef | grep PATTERN
-
-
-
-netgrep
-=======
-netstat -nap | grep PATTERN

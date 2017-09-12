@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-05-27 10:51:17 Saturday by ahei>
+# Time-stamp: <2017-09-12 22:44:28 Tuesday by ahei>
 
 # @file rgrep.sh
 # @version 1.0
@@ -114,6 +114,7 @@ for (i = 1; i <= size; i++) print results[sortedResults[i]]}'
 optInd=1
 colorOption=--color=always
 fieldDelimiter=" "
+remoteOptions=-q
 
 options=":h:d:vo:H:CSB:E:D:ng:lm:k:t:P"
 [ ! "$NOT_ADJUST_OPTIONS" ] && eval set -- $(getopt -o "$options" -- "$@")
