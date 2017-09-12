@@ -1,0 +1,271 @@
+#!/usr/bin/env bash
+
+# Time-stamp: <2017-05-27 10:51:17 Saturday by ahei>
+
+# @file rgrep.sh
+# @version 1.0
+# @author ahei
+
+readonly PROGRAM_NAME="rgrep"
+readonly PROGRAM_VERSION="1.0.0"
+
+home=`cd $(dirname "$0") && pwd`
+
+. "$home"/common.sh
+
+usage()
+{
+    local code=1
+    local redirect
+    
+    if [ $# -gt 0 ]; then
+        code="$1"
+    fi
+
+    if [ "$code" != 0 ]; then
+        redirect="1>&2"
+    fi
+
+    eval cat "$redirect" << EOF
+usage: ${PROGRAM_NAME} [OPTIONS] (-H <HOST> | <CLUSTER>) <PATTERN> [<FILES>]
+
+Options:
+    -h <HOUR>
+        Set which hour file to grep.
+    -d <DAY>
+        Set which day file to grep.
+    -D <DAY>
+        Search all files about this day.
+    -m <MONTH>
+        Set which month file to grep.
+    -S  Do not sort files by date time you specified.
+    -B <TIME_BEGIN>
+        Set time begin string on every line.
+    -E <TIME_END>
+        Set time end string on every line.
+    -k FIELD_INDEX
+        Sort files by which field.
+    -t SEP
+        Set field delimiter.
+    GERP
+        Environment variable used to specify which grep to use.
+    -C  No color display.
+    -l  Only search current host.
+    -g GREP_OPTIONS
+        Set grep's options.
+    -o REMOTE_OPTIONS
+        Set remote's options.
+    -n  Do not really execute command, only print command to execute.
+    -P  When output, do not insert host prefix.
+    -v  Output version info.
+EOF
+
+    exit "$code"
+}
+
+# $1 cluster
+# $2 day
+# $3 hour
+getFiles()
+{
+    local cluster=$1
+    local month=$2
+    local day=$3
+    local hour=$4
+    local files
+    
+    for key in "${!clusterFiles[@]}"; do
+        if grep -qx "$key" <<< "$cluster"; then
+            files="${clusterFiles[$key]}"
+        fi
+    done
+
+    if [ ! "$files" ]; then
+        echo -n "$files"
+        return
+    fi
+
+    getTimeStr "$files" "$month" "$day" "$hour"
+}
+
+sortFiles()
+{
+    if [ "$noSort" ] || [ "$isExecute" = 0 ]; then
+        cat
+        return
+    fi
+    
+    cat | awk -F"$fieldDelimiter" -v timeBegin="$timeBegin" -v timeEnd="$timeEnd" -v keyField="$keyField" '{
+if (keyField) {results[$ keyField FNR] = $ 0; next; }
+
+prefix = ":[m[K"; # grep maybe have color output
+begin = index($ 0, prefix timeBegin);
+if (begin == 0) {begin = index($ 0, timeBegin);}
+else {timeBegin = prefix timeBegin;}
+end = index($ 0, timeEnd);
+timeStr = substr($ 0, begin + length(timeBegin), end - begin - length(timeBegin));
+if (length(timeStr) < 10) print;
+else results[timeStr FNR] = $ 0;
+} END {
+size = asorti(results, sortedResults);
+for (i = 1; i <= size; i++) print results[sortedResults[i]]}'
+}
+
+optInd=1
+colorOption=--color=always
+fieldDelimiter=" "
+
+options=":h:d:vo:H:CSB:E:D:ng:lm:k:t:P"
+[ ! "$NOT_ADJUST_OPTIONS" ] && eval set -- $(getopt -o "$options" -- "$@")
+while getopts "$options" OPT; do
+    case "$OPT" in
+        H)
+            hosts="$hosts $OPTARG"
+            ;;
+
+        C)
+            colorOption=
+            ;;
+            
+        o)
+            remoteOptions="$OPTARG"
+            ;;
+
+        n)
+            remoteOptions="$remoteOptions -n -V"
+            isExecute=0
+            ;;
+
+        S)
+            noSort=1
+            ;;
+
+        B)
+            timeBegin="$OPTARG"
+            ;;
+
+        E)
+            timeEnd="$OPTARG"
+            ;;
+        
+        h)
+            hour="$OPTARG"
+            ;;
+            
+        d)
+            day="$OPTARG"
+            ;;
+
+        D)
+            day="$OPTARG"
+            hour='*'
+            ;;
+
+        m)
+            month="$OPTARG"
+            ;;
+        
+        g)
+            grepOptions="$OPTARG"
+            ;;
+
+        l)
+            searchLocal=1
+            ;;
+
+        k)
+            keyField="$OPTARG"
+            ;;
+
+        t)
+            fieldDelimiter="$OPTARG"
+            ;;
+        
+        P)
+            remoteOptions="$remoteOptions -P"
+            noPrefix=1
+            ;;
+        
+        v)
+            version
+            ;;
+
+        :)
+            case "${OPTARG}" in
+                ?)
+                    echoe "Option \`-${OPTARG}' need argument.\n"
+                    usage
+            esac
+            ;;
+
+        ?)
+            echoe "Invalid option \`-${OPTARG}'.\n"
+            usage
+            ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+[ -z "$GREP" ] && GREP=grep
+
+if [ "$keyField" ]; then
+    if [ ! "$noPrefix" ]; then
+        if ! ((keyField++)); then
+            echoe "Invalid key field \`$OPTARG'!"
+            exit 1
+        fi
+    fi
+fi
+
+if { [ ! "$timeBegin" ] || [ ! "$timeEnd" ]; } && [ ! "$keyField" ]; then
+    noSort=1
+fi
+
+if [ ! "$hosts" ]; then
+    cluster=$1
+    if [ ! "$cluster" ]; then
+        echoe "Must specify cluster!"
+        usage
+    fi
+    
+    shift
+fi
+    
+if [ $# -lt 1 ]; then
+    echoe "Must specify pattern!"
+    usage
+fi
+
+pattern=$1
+shift
+
+if [ $# -ge 1 ]; then
+    files="$@"
+else
+    if [ -z "$cluster" ]; then
+        echoe "No files specified, must specify cluster!"
+        usage
+    fi
+    
+    declare -A clusterFiles
+    . /etc/rgreprc 2>/dev/null
+    . ~/.rgreprc 2>/dev/null
+    files=$(getFiles "$cluster" "$month" "$day" "$hour")
+    if [ ! "$files" ]; then
+        echoe "No files specified for cluster $cluster!"
+        usage
+    fi
+fi
+
+command="$GREP $grepOptions $colorOption '$pattern' $files"
+if [ "$searchLocal" = 1 ]; then
+    if [ "$isExecute" = 0 ]; then
+        echo "$command"
+    else
+        eval "$command"
+    fi
+    exit
+fi
+
+remote $remoteOptions -H "$hosts" -p "$fieldDelimiter" $cluster "$command" | sortFiles

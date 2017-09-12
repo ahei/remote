@@ -1,0 +1,340 @@
+#!/usr/bin/env bash
+
+# Time-stamp: <2017-09-12 10:24:58 Tuesday by ahei>
+
+readonly PROGRAM_NAME="remote"
+readonly PROGRAM_VERSION="1.0"
+
+bin=`cd $(dirname "$0"); pwd`
+
+version()
+{
+    echo "${PROGRAM_NAME} ${PROGRAM_VERSION}"
+    exit 1
+}
+
+# echo to stderr
+echoe()
+{
+    printf "$*\n" 1>&2
+}
+
+usage()
+{
+    local code=1
+    if [ $# -gt 0 ]; then
+        code="$1"
+    fi
+
+    if [ "$code" != 0 ]; then
+        local redirect="1>&2"
+    fi
+
+    eval cat "$redirect" << EOF
+usage: ${PROGRAM_NAME} [OPTIONS] (-H <HOST> | -f <HOSTS_FILE> | <CLUSTER>) [<COMMAND>]
+       ${PROGRAM_NAME} [OPTIONS] -c (-H <HOST> | -f <HOSTS_FILE> | <CLUSTER>) <FILE> [<DST_FILE>]
+
+Options:
+    -l <LOGIN_NAME>
+        Specifies the user to log in as on the remote machine.
+    -n  Do not really execute command, only print command to execute.
+    -V  Output command to be executed to standard output.
+    -q  Quiet; do not write anything to standard output.
+    -g  Execute command foreground.
+    -N  If hosts you specified contain current host, do not execute or scp files.
+    -c  Use file copy mode.
+    -t <SECONDS>
+        Time to sleep when execute command on next host.
+    -P  When output, do not insert host prefix.
+    -p  Delimiter when output host prefix.
+    -H <HOST>
+        Add host.
+    -f <HOSTS_FILE>
+        Add the hosts file.
+    -F <LOCAL_FILE>
+        Add the local file to copy.
+    -s  When execute commands failed, stop execute other commands and exit.
+    -o SSH_OPTIONS | SCP_OPTIONS
+        Set ssh options.
+    -C  When execute command on remote server, force change directory to work directory on current host.
+    -W <SECONDS>
+        Wait time which user specified when exit.
+    -L Do not login remote machine when cluster only contain one machine.
+    -v  Output version info.
+    -h  Output this help.
+EOF
+
+    exit "$code"
+}
+
+# $1是否是本机
+isCurrentHost()
+{
+    local host="$1"
+    [ "$HOSTNAME" = "$host" ] || LANG= ifconfig | egrep "inet addr:[^ ]+" -o | cut -d: -f2 | fgrep -x "$host" -q
+}
+
+# 终止ssh/scp
+over()
+{
+    local command
+
+    if [ "$copyMode" ]; then
+        command=scp
+    else
+        command=ssh
+    fi
+
+    ps -ef | fgrep "$command" | fgrep -v fgrep | awk "$ 3 == $$ {print $ 2}" | xargs kill -9 &>/dev/null
+    rm -rf ~/.ssh/master-$USER@*
+    exit
+}
+
+trap over INT
+
+isExecute=1
+background="&"
+isQuiet=0
+prefixDelimiter=" "
+
+. /etc/remoterc 2>/dev/null
+. /etc/remoterc 2>/dev/null
+. ~/.remoterc 2>/dev/null
+. ~/.remoterc 2>/dev/null
+
+while getopts ":hvH:f:l:Vqsigo:NcCnW:Pt:p:L" OPT; do
+    case "$OPT" in
+        H)
+            if [ "$OPTARG" ]; then
+                hosts="$hosts $OPTARG"
+            fi
+            ;;
+
+        f)
+            if [ ! -r "$OPTARG" ]; then
+                echoe "Can not read file \`$OPTARG'."
+                usage
+            fi
+            
+            hosts="$hosts `cat $OPTARG`"
+            ;;
+
+        l)
+            user="$OPTARG"
+            ;;
+
+        n)
+            isExecute=0
+            ;;
+
+        V)
+            isQuiet=0
+            ;;
+
+        q)
+            isQuiet=1
+            ;;
+
+        s)
+            isStop=1
+            ;;
+
+        g)
+            background=
+            ;;
+
+        o)
+            sshOptions="$OPTARG"
+            ;;
+
+        N)
+            excludeCurrent=1
+            ;;
+
+        C)
+            forceCD=1
+            ;;
+
+        c)
+            copyMode=1
+            ;;
+
+        W)
+            secondsWait="$OPTARG"
+            ;;
+
+        P)
+            noHostPrefix=1
+            ;;
+
+        t)
+            timeSleep="$OPTARG"
+            ;;
+
+        p)
+            prefixDelimiter="$OPTARG"
+            ;;
+
+        L)
+            noLogin=1
+            ;;
+        
+        v)
+            version
+            ;;
+
+        h)
+            usage 0
+            ;;
+
+        :)
+        case "${OPTARG}" in
+            ?)
+                echoe "Option \`-${OPTARG}' need argument.\n"
+                usage
+        esac
+        ;;
+
+        ?)
+            echoe "Invalid option \`-${OPTARG}'.\n"
+            usage
+            ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+sshOpts="-o StrictHostKeyChecking=no $sshOptions"
+ssh="ssh $sshOpts"
+scp="scp $sshOpts"
+
+# 执行命令
+if [ -z "$copyMode" ]; then
+    # 第一个参数为cluster
+    if [ -z "$hosts" ]; then
+        if [ "$#" -lt 1 ]; then
+            echoe "No cluster specify.\n"
+            usage
+        fi
+
+        cluster=$1
+        hosts="$(eval echo \$$cluster)"
+        if [ -z "$hosts" ]; then
+            echoe "Cluster $cluster is empty!"
+            usage
+        fi
+        
+        shift
+    fi
+    
+    if [ "$#" -lt 1 ]; then
+        hostNum=0
+        for i in $hosts; do
+            let hostNum++
+        done
+        if ((hostNum == 1)) && [ ! "$noLogin" ]; then
+            $ssh $i$login
+            exit
+        fi
+        for i in $hosts; do
+            ip2Host $i
+        done
+        exit
+    fi
+
+    command="$@"
+
+    if [ "$forceCD" ]; then
+        command="cd $(pwd) && $command"
+    else
+        command="cd $(pwd) 2>/dev/null; $command"
+    fi
+
+    commandEscaped=$(echo "$command" | sed 's/"/\\"/g')
+    first=1
+    
+    for i in $hosts; do
+        i=$(ip2Host $i)
+        [ -n "$user" ] && login=" -l $user"
+        
+        if [ -n "$excludeCurrent" ]; then
+            if isCurrentHost "$i"; then
+                continue
+            fi
+        fi
+
+        if [ ! "$first" ] && [ "$timeSleep" ]; then
+            sleep "$timeSleep"
+        fi
+        first=
+        
+        command="$ssh $i$login \"$commandEscaped\" 2>&1"
+        if [ -z "$noHostPrefix" ]; then
+            command="$command | sed \"s/^/$i:$prefixDelimiter/\""
+        fi
+        executeCommand "$command $background" "$isExecute" "$isQuiet" "$isStop"
+    done
+
+    if [ -z "$secondsWait" ]; then
+        wait
+    else
+        (( isExecute != 0 )) && sleep "$secondsWait"
+        over
+    fi
+    
+    exit
+fi
+
+# 拷贝文件
+if [ -z "$hosts" ]; then
+    if [ "$#" -lt 1 ]; then
+        echoe "No cluster specify.\n"
+        usage
+    fi
+    cluster=$1
+    hosts="$(eval echo \$$cluster)"
+    if [ -z "$hosts" ]; then
+        echoe "Cluster $cluster is empty!"
+        usage
+    fi
+
+    shift
+fi
+
+if [ "$#" -lt 1 ]; then
+    echoe "No source file specify.\n"
+    usage
+fi
+srcFile="$1"
+shift
+
+dstFile="$1"
+[ "$dstFile" ] && dstFile=$(toAbsPath "$dstFile")
+if [ -z "$dstFile" ]; then
+    dstFile=$(dirname $(normalizePath "$srcFile"))/
+    excludeCurrent=1
+fi
+    
+for i in $hosts; do
+    i=$(ip2Host $i)
+    if [ -z "$user" ]; then
+        host="$i"
+    else
+        host="$user@$i"
+    fi
+
+    if [ -n "$excludeCurrent" ]; then
+        if isCurrentHost "$host"; then
+            continue
+        fi
+    fi
+    
+    executeCommand "$scp -r $srcFile $host:$dstFile 2>&1 | sed \"s/^/$i: /\" $background" "$isExecute" "$isQuiet" "$isStop"
+done
+
+if [ -z "$secondsWait" ]; then
+    wait
+else
+    (( isExecute != 0 )) && sleep "$secondsWait"
+    over
+fi

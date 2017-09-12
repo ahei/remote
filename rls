@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+
+# Time-stamp: <2016-04-22 16:53:40 Friday by ahei>
+
+# @file ls.sh
+# @version 1.0
+# @author ahei
+
+readonly PROGRAM_NAME="rls"
+readonly PROGRAM_VERSION="1.0.0"
+
+home=`cd $(dirname "$0") && pwd`
+
+. "$home"/common.sh
+
+usage()
+{
+    local code=1
+    local redirect
+    
+    if [ $# -gt 0 ]; then
+        code="$1"
+    fi
+
+    if [ "$code" != 0 ]; then
+        redirect="1>&2"
+    fi
+
+    eval cat "$redirect" << EOF
+usage: ${PROGRAM_NAME} [OPTIONS] CLUSTER FILES [LS_OPTIONS]
+
+Options:
+    -o REMOTE_OPTIONS
+        Set remote's options.
+    -v  Output version info.
+    -h  Output this help.
+EOF
+
+    exit "$code"
+}
+
+while getopts ":hvo:" OPT; do
+    case "$OPT" in
+        o)
+            remoteOptions="$OPTARG"
+            ;;
+
+        v)
+            version
+            ;;
+
+        h)
+            usage 0
+            ;;
+
+        :)
+            case "${OPTARG}" in
+                ?)
+                    echoe "Option \`-${OPTARG}' need argument.\n"
+                    usage
+            esac
+            ;;
+
+        ?)
+            echoe "Invalid option \`-${OPTARG}'.\n"
+            usage
+            ;;
+    esac
+done
+
+shift $((OPTIND - 1))
+
+if [ $# -lt 2 ]; then
+    usage
+fi
+
+cluster=$1
+file=$2
+shift 2
+
+remote -q $remoteOptions "$cluster" "ls -l $file $@"
