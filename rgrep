@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-09-12 22:44:28 Tuesday by ahei>
+# Time-stamp: <2017-09-13 11:00:21 Wednesday by ahei>
 
 # @file rgrep.sh
 # @version 1.0
@@ -11,7 +11,17 @@ readonly PROGRAM_VERSION="1.0.0"
 
 home=`cd $(dirname "$0") && pwd`
 
-. "$home"/common.sh
+version()
+{
+    echo "${PROGRAM_NAME} ${PROGRAM_VERSION}"
+    exit 1
+}
+
+# echo to stderr
+echoe()
+{
+    printf "$*\n" 1>&2
+}
 
 usage()
 {

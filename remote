@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-09-13 10:45:50 Wednesday by ahei>
+# Time-stamp: <2017-09-13 10:56:35 Wednesday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -139,6 +139,18 @@ normalizePath()
     fi
 
     echo "$path"
+}
+
+joinPath()
+{
+    local path="$1"
+    local name="$2"
+
+    if [[ "${path:-1:1}" = "/" ]]; then
+        echo "${path}${name}"
+    else
+        echo "${path}/${name}"
+    fi
 }
 
 # 终止ssh/scp

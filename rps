@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2016-04-22 16:54:21 Friday by ahei>
+# Time-stamp: <2017-09-13 10:59:43 Wednesday by ahei>
 
 # @file ps.sh
 # @version 1.0
@@ -11,7 +11,17 @@ readonly PROGRAM_VERSION="1.0.0"
 
 home=`cd $(dirname "$0") && pwd`
 
-. "$home"/common.sh
+version()
+{
+    echo "${PROGRAM_NAME} ${PROGRAM_VERSION}"
+    exit 1
+}
+
+# echo to stderr
+echoe()
+{
+    printf "$*\n" 1>&2
+}
 
 usage()
 {
