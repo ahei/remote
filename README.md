@@ -12,6 +12,7 @@ remote
 - 待执行的命令包含参数时如果不需要引用的话不需要用引号引起来, 比如`remote CLUSTER “ls -l”`可以直接写成`remote CLUSTER ls -l`
 - 执行的命令涉及到目录/文件时可以直接用相对路径, 比如当前在路径`~/work`目录下, 那么`remote CLUSTER cat a`就是到每台机器上执行命令`cat ~/work/a`
 - 支持调试模式, 不运行命令, 只打印将要运行的命令, 防止出错
+- 支持以机器名缩写方式登录机器
 - 支持从命令行和文件中读取机器列表
 - 支持设定每台机器之间运行命令的间隔
 
@@ -23,6 +24,7 @@ remote
 - 根据配置搜索日志: `rgrep CLUSTER PATTERN`
 - 搜索指定日志文件: `rgrep CLUSTER PATTERN FILES`
 - 搜索特定日期日志: `rgrep CLUSTER PATTERN -d 2 -h -1`
+- 以机器名缩写方式登录: `rssh MACHINE`
 
 
 安装
