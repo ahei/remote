@@ -9,11 +9,20 @@ remote
 - **支持强大的文件拷贝模式**
 - **包含强大的线上日志搜索的工具rgrep**
 - 支持并行和串行执行命令
-- 待执行的命令包含参数时如果不需要引用的话不需要用引号引起来, 比如`remote cluster “ls -l”`可以直接写成`remote cluster ls -l`
-- 执行的命令涉及到目录/文件时可以直接用相对路径, 比如当前在路径`~/work`目录下, 那么`remote cluster cat a`就是到每台机器上执行命令`cat ~/work/a`
+- 待执行的命令包含参数时如果不需要引用的话不需要用引号引起来, 比如`remote CLUSTER “ls -l”`可以直接写成`remote CLUSTER ls -l`
+- 执行的命令涉及到目录/文件时可以直接用相对路径, 比如当前在路径`~/work`目录下, 那么`remote CLUSTER cat a`就是到每台机器上执行命令`cat ~/work/a`
 - 支持调试模式, 不运行命令, 只打印将要运行的命令, 防止出错
 - 支持从命令行和文件中读取机器列表
 - 支持设定每台机器之间运行命令的间隔
+
+
+使用例子
+======
+- 执行命令: `remote CLUSTER ls -l`
+- 拷贝文件: `rcp CLUSTER FILE`
+- 根据配置搜索日志: `rgrep CLUSTER PATTERN`
+- 搜索指定日志文件: `rgrep CLUSTER PATTERN FILES`
+- 搜索特定日期日志: `rgrep CLUSTER PATTERN -d 2 -h -1`
 
 
 安装
@@ -51,7 +60,7 @@ remote 可选选项 机器列表 命令
 * -f 机器列表文件
 * -H 机器列表字符串
 
-到远程机器上执行命令时会先cd到当前机器所在的目录, 所以如果想看别的机器上同目录下是否有同样的文件非常简单: 先在本机器上cd到指定目录, 然后执行 remote cluster ls file即可.
+到远程机器上执行命令时会先cd到当前机器所在的目录, 所以如果想看别的机器上同目录下是否有同样的文件非常简单: 先在本机器上cd到指定目录, 然后执行 remote CLUSTER ls file即可.
 
 命令可以包含参数, 带参数的命令可以不用引号引用起来, 比如: remote redis ls -l test.sh
 
