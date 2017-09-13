@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-09-13 10:40:54 Wednesday by ahei>
+# Time-stamp: <2017-09-13 10:42:44 Wednesday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -95,6 +95,25 @@ isIp()
 {
     local ip=$1
     grep -q -E "([0-9]{1,3}\.){3}[0-9]{1,3}" <<< "$ip"
+}
+
+executeCommand()
+{
+    local _command="$1"
+    local _isExecute="$2"
+    local _isQuiet="$3"
+    local _isStop="$4"
+    
+    [ "$_isQuiet" != 1 ] && echo "Executing command \`${_command}' ..."
+    if [ "${_isExecute}" != "0" ]; then
+        eval "${_command}"
+        if [ $? != 0 ]; then
+            echoe "Execute command \`${_command}' failed."
+            if [ "$_isStop" = 1 ]; then
+                exit 1
+            fi
+        fi
+    fi
 }
 
 # 终止ssh/scp
