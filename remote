@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-09-12 10:24:58 Tuesday by ahei>
+# Time-stamp: <2017-09-13 10:39:51 Wednesday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -72,6 +72,23 @@ isCurrentHost()
 {
     local host="$1"
     [ "$HOSTNAME" = "$host" ] || LANG= ifconfig | egrep "inet addr:[^ ]+" -o | cut -d: -f2 | fgrep -x "$host" -q
+}
+
+ip2Host()
+{
+    local ip=$1
+    local host=$(host $ip)
+
+    if ! isIp "$ip"; then
+        echo "$ip"
+        return
+    fi
+    
+    if grep -q "not found" <<< "$host"; then
+        echo $ip
+    else
+        echo $host | awk '{print $ NF}' | sed 's/.$//g'
+    fi
 }
 
 # 终止ssh/scp
