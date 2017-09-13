@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-09-13 10:42:44 Wednesday by ahei>
+# Time-stamp: <2017-09-13 10:45:50 Wednesday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -114,6 +114,31 @@ executeCommand()
             fi
         fi
     fi
+}
+
+normalizePath()
+{
+    local path="$1"
+
+    if [ -d "$path" ]; then
+        echo "$(cd $path && pwd)"
+        return
+    fi
+
+    local dir=$(dirname "$path")
+    local basename=$(basename "$path")
+
+    if [ -r "$dir" ]; then
+        dir="$(cd $dir && pwd)"
+    fi
+
+    if [[ "$basename" != "." ]]; then
+        path="$(joinPath $dir $basename)"
+    else
+        path="$dir"
+    fi
+
+    echo "$path"
 }
 
 # 终止ssh/scp
