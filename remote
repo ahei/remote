@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-11-02 09:50:34 Thursday by ahei>
+# Time-stamp: <2017-11-02 10:00:05 Thursday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -283,8 +283,11 @@ done
 
 shift $((OPTIND - 1))
 
-sshOpts="-o StrictHostKeyChecking=no $sshOptions"
+sshOpts="$sshOptions"
 [ "$SSH" ] || SSH=ssh
+if [[ "$SSH" == *ssh* ]]; then
+    sshOpts="-o StrictHostKeyChecking=no $sshOpts"
+fi
 ssh="$SSH $sshOpts"
 scp="scp $sshOpts"
 
