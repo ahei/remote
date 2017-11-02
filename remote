@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-11-02 14:09:31 Thursday by ahei>
+# Time-stamp: <2017-11-02 23:02:07 Thursday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -299,7 +299,11 @@ if [ -z "$copyMode" ]; then
         fi
 
         cluster=$1
-        hosts="$(eval echo \$$cluster)"
+        if [ "$REMOTE_GET_HOSTS" ]; then
+            hosts=$($REMOTE_GET_HOSTS "$cluster")
+        else
+            hosts="$(eval echo \$$cluster)"
+        fi
         if [ -z "$hosts" ]; then
             echoe "Cluster $cluster is empty!"
             usage
