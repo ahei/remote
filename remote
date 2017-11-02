@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-11-02 10:00:05 Thursday by ahei>
+# Time-stamp: <2017-11-02 14:09:31 Thursday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -177,8 +177,6 @@ isQuiet=0
 prefixDelimiter=" "
 
 . /etc/remoterc 2>/dev/null
-. /etc/remoterc 2>/dev/null
-. ~/.remoterc 2>/dev/null
 . ~/.remoterc 2>/dev/null
 
 while getopts ":hvH:f:l:Vqsigo:NcCnW:Pt:p:L" OPT; do
