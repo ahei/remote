@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+
+# Time-stamp: <2017-11-04 16:06:40 Saturday by ahei>
+
+function getConfigFiles() {
+    local configs="/etc/remoterc"
+    [ -e "$configs" ] || configs=
+    [ -e $HOME/.remoterc ] && configs="$configs "$HOME/.remoterc
+    echo $configs
+}
+
+function getAllClusters() {
+    awk -F= '$ 1 {print $ 1}' $(getConfigFiles) | grep -E "^[[:space:]]*#" -v
+}
+
+function getAllSingleHost() {
+    awk 'NF == 1' $(getConfigFiles) | cut -d= -f1 | grep -E "^[[:space:]]*#" -v
+}
+
+function getPreOptionNum() {
+    local optionNum
+    
+    for ((i = 1; i < COMP_CWORD; i++)); do
+        if [[ ${COMP_WORDS[i]} != -* ]]; then
+            echo "$optionNum"
+            return
+        fi
+        let optionNum++
+    done
+
+    echo "$optionNum"
+}
+
+function _remote() {
+    local cur prev opts
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local opts="-l -n -V -q -g -N -c -t -p -H -f -F -s -o -C -W -L -v -h"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    optionNum=$(getPreOptionNum)
+    if ((COMP_CWORD - optionNum == 1)); then
+        COMPREPLY=( $(compgen -W "$(getAllClusters)" -- ${cur}) )
+        return 0
+    fi
+
+    COMPREPLY=( $(compgen -A command -- "$cur") )
+}
+
+function _rcp() {
+    local cur prev opts
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local opts="-l -n -V -q -g -N -t -p -H -f -F -s -o -C -W -L -v -h"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    optionNum=$(getPreOptionNum)
+    index=$((COMP_CWORD - optionNum))
+    if ((index == 1)); then
+        COMPREPLY=( $(compgen -W "$(getAllClusters)" -- ${cur}) )
+        return 0
+    fi
+
+    if ((index == 2)); then
+        COMPREPLY=( $(compgen -f -- ${cur}) )
+        return 0
+    fi
+}
+
+function _rssh() {
+    local cur prev opts
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local opts="-l -o -v -h"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    optionNum=$(getPreOptionNum)
+    index=$((COMP_CWORD - optionNum))
+    if ((index == 1)); then
+        COMPREPLY=( $(compgen -W "$(getAllSingleHost)" -- ${cur}) )
+        return 0
+    fi
+}
+
+complete -F _remote remote
+complete -F _rcp rcp
+complete -F _rssh rssh

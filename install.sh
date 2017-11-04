@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Time-stamp: <2017-09-13 14:23:11 Wednesday by ahei>
+# Time-stamp: <2017-11-04 16:08:03 Saturday by ahei>
 
 readonly PROGRAM_NAME="install.sh"
 readonly PROGRAM_VERSION="1.0"
@@ -86,3 +86,4 @@ shift $((OPTIND - 1))
 writeToFile "export PATH=$home:"'$PATH' $profile
 writeToFile 'alias rcp="remote -c"' $profile
 writeToFile 'alias rssh=remote' $profile
+writeToFile '. $home/remote-completion' $profile
