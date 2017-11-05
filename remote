@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-11-02 23:02:07 Thursday by ahei>
+# Time-stamp: <2017-11-05 23:17:46 Sunday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -366,6 +366,8 @@ if [ -z "$copyMode" ]; then
         (( isExecute != 0 )) && sleep "$secondsWait"
         over
     fi
+
+    stty echo
     
     exit
 fi
