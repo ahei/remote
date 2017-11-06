@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-11-06 09:14:38 Monday by ahei>
+# Time-stamp: <2017-11-06 09:25:31 Monday by ahei>
 
 function getConfigFiles() {
     local configs="/etc/remoterc"
@@ -69,6 +69,8 @@ function _rgrep() {
         COMPREPLY=( $(compgen -W "$(getAllClusters)" -- ${cur}) )
         return 0
     fi
+
+    COMPREPLY=( $(compgen -f -- ${cur}) )
 }
 
 function _rcp() {
@@ -90,10 +92,7 @@ function _rcp() {
         return 0
     fi
 
-    if ((index == 2)); then
-        COMPREPLY=( $(compgen -f -- ${cur}) )
-        return 0
-    fi
+    COMPREPLY=( $(compgen -f -- ${cur}) )
 }
 
 function _rssh() {
