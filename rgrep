@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-11-05 22:31:28 Sunday by ahei>
+# Time-stamp: <2017-11-10 12:58:29 Friday by ahei>
 
 # @file rgrep.sh
 # @version 1.0
@@ -309,8 +309,8 @@ else
     fi
     
     declare -A clusterFiles
-    . /etc/rgreprc 2>/dev/null
-    . ~/.rgreprc 2>/dev/null
+    . /etc/remoterc 2>/dev/null
+    . ~/.remoterc 2>/dev/null
     files=$(getFiles "$cluster" "$month" "$day" "$hour")
     if [ ! "$files" ]; then
         echoe "No files specified for cluster $cluster!"
