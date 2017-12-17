@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-12-17 21:08:11 Sunday by ahei>
+# Time-stamp: <2017-12-17 21:18:59 Sunday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -299,7 +299,7 @@ if [[ "$SSH" == *ssh* ]]; then
 fi
 [ "$SCP" ] || SCP=scp
 ssh="$SSH $sshOpts"
-scp="$scp $sshOpts"
+scp="$SCP $sshOpts"
 
 # 执行命令
 if [ -z "$copyMode" ]; then
