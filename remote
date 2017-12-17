@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-12-17 19:19:28 Sunday by ahei>
+# Time-stamp: <2017-12-17 19:20:28 Sunday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -31,8 +31,8 @@ usage()
     fi
 
     eval cat "$redirect" << EOF
-usage: ${PROGRAM_NAME} [OPTIONS] (-H <HOST> | -f <HOSTS_FILE> | <CLUSTER>) [<COMMAND>]
-       ${PROGRAM_NAME} [OPTIONS] -c (-H <HOST> | -f <HOSTS_FILE> | <CLUSTER>) <FILE> [<DST_FILE>]
+usage: ${PROGRAM_NAME} [OPTIONS] (<CLUSTER> | -H <HOST> | -f <HOSTS_FILE>) [<COMMAND>]
+       ${PROGRAM_NAME} [OPTIONS] -c (<CLUSTER> | -H <HOST> | -f <HOSTS_FILE>) <FILE> [<DST_FILE>]
 
 Options:
     -l <LOGIN_NAME>

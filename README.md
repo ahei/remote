@@ -61,8 +61,20 @@ remote 可选选项 机器列表 命令
 机器列表有三种指定办法:
 
 * 提供集群名, 集群配置文件为/etc/remoterc和~/.remoterc, /etc/remtoerc为全局配置文件, 当同一个集群同时出现在全局配置文件和用户配置文件中时, 优先使用用户配置文件. 
-  上述配置文件其实都是shell脚本, 集群名为shell变量, 比如: `redis=“redis0 redis1 redis2”`, 则表示集群redis有三台机器组成. 该办法是比较方便的最常用的指定机器列表的方法.
+  上述配置文件其实都是shell脚本, 集群名为shell变量, 比如: `redis=“redis0 redis1 redis2”`, 则表示集群redis有三台机器组成. 该办法是比较方便的最常用的指定机器列表的方法. 配置例子:
+```bash
+cr0=xxx-redis00.bj
+cr1=xxx-redis01.bj
+cr2=xxx-redis02.bj
+cr3=xxx-redis03.bj
+cr4=xxx-redis04.bj
+cr="$cr0 $cr1 $cr2 $cr3 $cr4"
+redis="$cr"
+```
+  按照上述配置后, 可以执行`remote redis date`, 表示在redis集群上执行date命令
+
 * -f 机器列表文件
+
 * -H 机器列表字符串
 
 到远程机器上执行命令时会先cd到当前机器所在的目录, 所以如果想看别的机器上同目录下是否有同样的文件非常简单: 先在本机器上cd到指定目录, 然后执行 remote CLUSTER ls file即可.
