@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-12-17 19:26:11 Sunday by ahei>
+# Time-stamp: <2017-12-17 19:28:44 Sunday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -319,7 +319,7 @@ if [ -z "$copyMode" ]; then
             let hostNum++
         done
         if ((hostNum == 1)) && [ ! "$noLogin" ]; then
-            $ssh $i$login
+            $ssh $login$i
             exit
         fi
         for i in $hosts; do
