@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-12-17 19:20:28 Sunday by ahei>
+# Time-stamp: <2017-12-17 19:26:11 Sunday by ahei>
 
 readonly PROGRAM_NAME="remote"
 readonly PROGRAM_VERSION="1.0"
@@ -341,7 +341,7 @@ if [ -z "$copyMode" ]; then
     
     for i in $hosts; do
         i=$(ip2Host $i)
-        [ -n "$user" ] && login=" -l $user"
+        [ -n "$user" ] && login="$user@"
         
         if [ -n "$excludeCurrent" ]; then
             if isCurrentHost "$i"; then
@@ -354,7 +354,7 @@ if [ -z "$copyMode" ]; then
         fi
         first=
         
-        command="$ssh $i$login \"$commandEscaped\" 2>&1"
+        command="$ssh $login$i \"$commandEscaped\" 2>&1"
         if [ -z "$noHostPrefix" ]; then
             command="$command | sed \"s/^/$i:$prefixDelimiter/\""
         fi
