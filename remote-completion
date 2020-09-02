@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2020-09-02 11:19:45 Wednesday by ahei>
+# Time-stamp: <2020-09-02 11:32:06 Wednesday by ahei>
 
 function getConfigFiles() {
     local configs="/etc/remoterc"
@@ -142,3 +142,4 @@ complete -F _rgrep rgrep
 complete -F _rcp rcp
 complete -F _rssh rssh
 complete -F _rps rps
+complete -F _rps rls
