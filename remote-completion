@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Time-stamp: <2017-11-06 09:25:31 Monday by ahei>
+# Time-stamp: <2020-09-02 11:19:45 Wednesday by ahei>
 
 function getConfigFiles() {
     local configs="/etc/remoterc"
@@ -115,7 +115,30 @@ function _rssh() {
     fi
 }
 
+function _rps() {
+    local cur prev opts
+
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    local opts="-o -v -h"
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+    optionNum=$(getPreOptionNum)
+    index=$((COMP_CWORD - optionNum))
+    if ((index == 1)); then
+        COMPREPLY=( $(compgen -W "$(getAllClusters)" -- ${cur}) )
+        return 0
+    fi
+
+    COMPREPLY=( $(compgen -f -- ${cur}) )
+}
+
 complete -F _remote remote
 complete -F _rgrep rgrep
 complete -F _rcp rcp
 complete -F _rssh rssh
+complete -F _rps rps
